@@ -28,6 +28,8 @@ end
 
 RegisterNetEvent('esx:playerLoaded')
 AddEventHandler('esx:playerLoaded', function(xPlayer)
+	ESX.PlayerData = xPlayer
+
 	PlayerManagement()
 	TriggerServerEvent("esx_vehicleshop:getVehiclesAndCategories")
 end)
@@ -240,10 +242,10 @@ function OpenShopMenu()
 		local vehicleData = vehiclesByCategory[data.current.name][data.current.value + 1]
 		local playerPed   = PlayerPedId()
 
+		DeleteDisplayVehicleInsideShop()
 		WaitForVehicleToLoad(vehicleData.model)
 
 		ESX.Game.SpawnLocalVehicle(vehicleData.model, Config.Zones.ShopInside.Pos, Config.Zones.ShopInside.Heading, function(vehicle)
-			DeleteDisplayVehicleInsideShop()
 			currentDisplayVehicle = vehicle
 			TaskWarpPedIntoVehicle(playerPed, vehicle, -1)
 			FreezeEntityPosition(vehicle, true)
@@ -251,10 +253,10 @@ function OpenShopMenu()
 		end)
 	end)
 
+	DeleteDisplayVehicleInsideShop()
 	WaitForVehicleToLoad(firstVehicleData.model)
 
 	ESX.Game.SpawnLocalVehicle(firstVehicleData.model, Config.Zones.ShopInside.Pos, Config.Zones.ShopInside.Heading, function(vehicle)
-		DeleteDisplayVehicleInsideShop()
 		currentDisplayVehicle = vehicle
 		TaskWarpPedIntoVehicle(playerPed, vehicle, -1)
 		FreezeEntityPosition(vehicle, true)
@@ -415,7 +417,7 @@ function OpenPopVehicleMenu()
 		local elements = {}
 
 		for k,v in ipairs(vehicles) do
-			local vehicleLabel = getVehicleFromModel(v.vehicle).label
+			local vehicleLabel = getVehicleFromModel(v.vehicle).name
 
 			table.insert(elements, {
 				label = ('%s [<span style="color:green;">%s</span>]'):format(vehicleLabel, TranslateCap('generic_shopitem', ESX.Math.GroupDigits(v.price))),
@@ -429,9 +431,9 @@ function OpenPopVehicleMenu()
 			elements = elements
 		}, function(data, menu)
 			local model = data.current.value
+			DeleteDisplayVehicleInsideShop()
 
 			ESX.Game.SpawnVehicle(model, Config.Zones.ShopInside.Pos, Config.Zones.ShopInside.Heading, function(vehicle)
-				DeleteDisplayVehicleInsideShop()
 				currentDisplayVehicle = vehicle
 
 				for i=1, #Vehicles, 1 do
@@ -452,7 +454,7 @@ function OpenRentedVehiclesMenu()
 		local elements = {}
 
 		for k,v in ipairs(vehicles) do
-			local vehicleLabel = getVehicleFromModel(v.name).label
+			local vehicleLabel = getVehicleFromModel(v.name).name
 
 			table.insert(elements, {
 				label = ('%s: %s - <span style="color:orange;">%s</span>'):format(v.playerName, vehicleLabel, v.plate),
@@ -711,21 +713,6 @@ if Config.EnablePlayerManagement then
 	end)
 end
 
--- Create Blips
-if Config.Blip.show then
-	CreateThread(function()
-		local blip = AddBlipForCoord(Config.Zones.ShopEntering.Pos)
-
-		SetBlipSprite (blip, Config.Blip.Sprite)
-		SetBlipDisplay(blip, Config.Blip.Display)
-		SetBlipScale  (blip, Config.Blip.Scale)
-		SetBlipAsShortRange(blip, true)
-
-		BeginTextCommandSetBlipName('STRING')
-		AddTextComponentSubstringPlayerName(TranslateCap('car_dealer'))
-		EndTextCommandSetBlipName(blip)
-	end)
-end
 
 -- Enter / Exit marker events & Draw Markers
 CreateThread(function()
